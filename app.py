@@ -92,7 +92,9 @@ def extract_tab() -> None:
                 current = st.session_state.editable_extracted.get(key) or {}
                 source_text = current.get("source_text")
                 if source_text and not st.session_state.match_status.get(key, False):
-                    st.warning(f"{field['label']}: 位置特定不可")
+                    st.warning(
+                        f"{field['label']}: 位置特定不可（値は抽出済みですがPDF上の該当箇所を特定できませんでした）"
+                    )
 
                 current_value = current.get("value")
                 value = st.text_input(

@@ -52,3 +52,11 @@ def test_locate_source_text_searches_per_page_only():
     ]
     assert locate_source_text(words, "契約番号").page == 1
     assert locate_source_text(words, "契約日").page == 2
+
+
+def test_locate_source_text_returns_none_when_not_found():
+    words = [
+        {"page": 1, "text": "契約", "polygon": [], "page_width": 8.27, "page_height": 11.69},
+        {"page": 1, "text": "番号", "polygon": [], "page_width": 8.27, "page_height": 11.69},
+    ]
+    assert locate_source_text(words, "支払条件") is None

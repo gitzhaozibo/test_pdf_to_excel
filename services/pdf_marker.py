@@ -3,7 +3,10 @@ from __future__ import annotations
 import difflib
 import unicodedata
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
+
+if TYPE_CHECKING:
+    import fitz
 
 
 @dataclass
@@ -65,7 +68,7 @@ def find_source_match_in_page(
 
     best_score = 0.0
     best_span = None
-    # OCRの揺れを許容するため、候補長はターゲット長の±15%で探索する
+    # OCR誤認識で文字数が少し増減するケースを吸収するため、候補長はターゲット長の±15%で探索する
     min_len = max(1, int(target_len * 0.85))
     max_len = min(len(page_text), int(target_len * 1.15) + 1)
 
@@ -105,7 +108,7 @@ def locate_source_text(words: Sequence[Dict], source_text: str) -> Optional[Matc
     return best
 
 
-def _polygon_to_rect(word: Dict):
+def _polygon_to_rect(word: Dict) -> Optional["fitz.Rect"]:
     import fitz
 
     polygon = word.get("polygon") or []
@@ -117,7 +120,9 @@ def _polygon_to_rect(word: Dict):
     return fitz.Rect(min(xs), min(ys), max(xs), max(ys))
 
 
-def render_highlighted_pages(pdf_bytes: bytes, words: Sequence[Dict], extracted: Dict[str, Dict]):
+def render_highlighted_pages(
+    pdf_bytes: bytes, words: Sequence[Dict], extracted: Dict[str, Dict]
+) -> Tuple[List[bytes], Dict[str, bool]]:
     import fitz
 
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
