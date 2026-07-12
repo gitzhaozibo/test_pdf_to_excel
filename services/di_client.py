@@ -8,13 +8,15 @@ from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
+from config import RETRYABLE_HTTP_STATUS_CODES
+
 
 def _is_retryable_di_error(exc: Exception) -> bool:
     if isinstance(exc, HttpResponseError):
         status = getattr(exc, "status_code", None)
         if status in (401, 403):
             return False
-        return status in (408, 429, 500, 502, 503, 504)
+        return status in RETRYABLE_HTTP_STATUS_CODES
     return isinstance(exc, ServiceRequestError)
 
 

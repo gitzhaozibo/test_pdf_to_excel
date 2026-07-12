@@ -7,7 +7,7 @@ from typing import Dict
 from openai import APIConnectionError, APITimeoutError, APIStatusError, AzureOpenAI
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from config import EXTRACT_FIELDS
+from config import EXTRACT_FIELDS, RETRYABLE_HTTP_STATUS_CODES
 
 
 SYSTEM_PROMPT = """あなたは契約書抽出アシスタントです。
@@ -24,7 +24,7 @@ def _is_retryable_openai_error(exc: Exception) -> bool:
     if isinstance(exc, APIStatusError):
         if exc.status_code in (401, 403):
             return False
-        return exc.status_code in (408, 409, 429, 500, 502, 503, 504)
+        return exc.status_code in RETRYABLE_HTTP_STATUS_CODES
     return isinstance(exc, (APIConnectionError, APITimeoutError))
 
 

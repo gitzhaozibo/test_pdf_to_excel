@@ -79,7 +79,6 @@ def fetch_contracts(
     from_date: Optional[date] = None,
     to_date: Optional[date] = None,
 ) -> List[Dict]:
-    # conditions は固定SQL断片のみを連結し、値は必ずパラメータバインドで渡す
     sql = """
     SELECT id, filename, extracted_at, contract_no, contract_name, party_a, party_b,
            contract_date, amount, period, payment_terms

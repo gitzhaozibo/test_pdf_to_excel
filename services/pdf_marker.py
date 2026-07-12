@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 if TYPE_CHECKING:
     import fitz
 
+from config import OCR_FUZZY_LENGTH_TOLERANCE
+
 
 @dataclass
 class MatchResult:
@@ -68,9 +70,9 @@ def find_source_match_in_page(
 
     best_score = 0.0
     best_span = None
-    # OCR誤認識で文字数が少し増減するケースを吸収するため、候補長はターゲット長の±15%で探索する
-    min_len = max(1, int(target_len * 0.85))
-    max_len = min(len(page_text), int(target_len * 1.15) + 1)
+    # OCR誤認識で文字数が少し増減するケースを吸収するため、候補長はターゲット長の±閾値で探索する
+    min_len = max(1, int(target_len * (1 - OCR_FUZZY_LENGTH_TOLERANCE)))
+    max_len = min(len(page_text), int(target_len * (1 + OCR_FUZZY_LENGTH_TOLERANCE)) + 1)
 
     candidate_starts = [idx for idx, ch in enumerate(page_text) if ch == target[0]]
     for start in candidate_starts:
