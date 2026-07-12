@@ -10,7 +10,7 @@ from openai import APIConnectionError, APITimeoutError, APIStatusError
 from psycopg import OperationalError
 
 from config import EXTRACT_FIELDS
-from services.db import fetch_contracts, init_db, save_contract
+from services.db import compute_pdf_hash, fetch_contracts, find_contract_by_hash, init_db, save_contract
 from services.di_client import analyze_pdf
 from services.excel_writer import contracts_to_excel
 from services.gpt_extractor import extract_fields_from_text
@@ -44,26 +44,40 @@ def extract_tab() -> None:
         st.session_state.match_status = {}
     if "current_filename" not in st.session_state:
         st.session_state.current_filename = None
+    if "current_pdf_bytes" not in st.session_state:
+        st.session_state.current_pdf_bytes = None
 
     if uploaded_file and st.button("データ抽出", type="primary"):
         pdf_bytes = uploaded_file.getvalue()
 
         try:
             with st.status("処理中", expanded=True) as status:
-                st.write("OCR中 (Azure Document Intelligence)")
-                full_text, words = analyze_pdf(pdf_bytes)
+                st.write("重複チェック中 (ハッシュ値照合)")
+                pdf_hash = compute_pdf_hash(pdf_bytes)
+                existing = find_contract_by_hash(pdf_hash)
 
-                st.write("AI抽出中 (Azure OpenAI)")
-                extracted = extract_fields_from_text(full_text)
+                if existing:
+                    st.write("同一PDFの既存結果を流用します")
+                    extracted = existing["extracted"] or {}
+                    # 既存PDFの場合はOCR/AI抽出を行わず、保存済みの抽出結果をそのまま流用する
+                    images, match_status = render_highlighted_pages(pdf_bytes, [], extracted)
+                    status.update(label="完了（既存結果を流用）", state="complete")
+                else:
+                    st.write("OCR中 (Azure Document Intelligence)")
+                    full_text, words = analyze_pdf(pdf_bytes)
 
-                st.write("マーキング中")
-                images, match_status = render_highlighted_pages(pdf_bytes, words, extracted)
+                    st.write("AI抽出中 (Azure OpenAI)")
+                    extracted = extract_fields_from_text(full_text)
+
+                    st.write("マーキング中")
+                    images, match_status = render_highlighted_pages(pdf_bytes, words, extracted)
+                    status.update(label="完了", state="complete")
 
                 st.session_state.preview_images = images
                 st.session_state.editable_extracted = extracted
                 st.session_state.match_status = match_status
                 st.session_state.current_filename = uploaded_file.name
-                status.update(label="完了", state="complete")
+                st.session_state.current_pdf_bytes = pdf_bytes
         except (HttpResponseError, ServiceRequestError) as exc:
             _show_error("OCR処理エラー", exc)
         except (APIConnectionError, APITimeoutError, APIStatusError) as exc:
@@ -113,6 +127,7 @@ def extract_tab() -> None:
                     save_contract(
                         st.session_state.current_filename or "unknown.pdf",
                         st.session_state.editable_extracted,
+                        st.session_state.current_pdf_bytes or b"",
                     )
                     st.success("DBに保存しました。")
                 except OperationalError as exc:

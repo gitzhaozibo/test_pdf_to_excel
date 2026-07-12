@@ -5,9 +5,10 @@ Streamlit + Azure Document Intelligence + Azure OpenAI + PostgreSQL で契約書
 ## 機能
 
 - PDFアップロード後に「データ抽出」ボタンで OCR → AI抽出 → ハイライト表示
-- 抽出値を画面で修正して PostgreSQL に保存
+- 抽出値を画面で修正して PostgreSQL に保存（PDF本体もDBに保存）
 - 保存済みデータを一覧表示し、Excelでダウンロード
 - 座標マッチングは正規化 + 文字単位逆引き + 曖昧一致フォールバック
+- 同一PDFはファイル名ではなくハッシュ値(SHA-256)で判定し、既存があれば抽出処理をスキップして保存済み結果を流用
 
 ## セットアップ
 
