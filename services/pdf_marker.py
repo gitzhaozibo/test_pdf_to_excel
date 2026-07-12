@@ -65,12 +65,12 @@ def find_source_match_in_page(
 
     best_score = 0.0
     best_span = None
+    # OCRの揺れを許容するため、候補長はターゲット長の±15%で探索する
     min_len = max(1, int(target_len * 0.85))
     max_len = min(len(page_text), int(target_len * 1.15) + 1)
 
-    for start in range(len(page_text)):
-        if page_text[start] != target[0]:
-            continue
+    candidate_starts = [idx for idx, ch in enumerate(page_text) if ch == target[0]]
+    for start in candidate_starts:
         for window_len in range(min_len, max_len + 1):
             end = start + window_len
             if end > len(page_text):
