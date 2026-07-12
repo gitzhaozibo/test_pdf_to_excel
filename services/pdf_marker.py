@@ -70,7 +70,7 @@ def find_source_match_in_page(
 
     best_score = 0.0
     best_span = None
-    # OCR誤認識で文字数が少し増減するケースを吸収するため、候補長はターゲット長の±閾値で探索する
+    # OCR誤認識で文字数が少し増減するケースを吸収するため、候補長はターゲット長の±15%(既定)で探索する
     min_len = max(1, int(target_len * (1 - OCR_FUZZY_LENGTH_TOLERANCE)))
     max_len = min(len(page_text), int(target_len * (1 + OCR_FUZZY_LENGTH_TOLERANCE)) + 1)
 

@@ -10,6 +10,12 @@ def test_normalize_text_nfkc_and_space():
     assert normalize_text("  ＡＢＣ １２３\n") == "abc123"
 
 
+def test_normalize_text_handles_empty_and_none():
+    assert normalize_text("") == ""
+    assert normalize_text("   \n\t") == ""
+    assert normalize_text(None) == ""
+
+
 def test_build_page_char_index_maps_char_to_word():
     words = [
         {"page": 1, "text": "契約", "polygon": [], "page_width": 8.27, "page_height": 11.69},

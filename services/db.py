@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS contracts (
 
 def _is_retryable_db_error(exc: Exception) -> bool:
     if isinstance(exc, OperationalError):
-        text = str(exc).lower()
-        if "password authentication failed" in text or "invalid authorization" in text:
+        sqlstate = getattr(exc, "sqlstate", None)
+        if sqlstate in ("28P01", "28000"):
             return False
         return True
     return False
