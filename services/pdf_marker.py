@@ -69,7 +69,7 @@ def find_source_match_in_page(
     max_len = min(len(page_text), int(target_len * 1.15) + 1)
 
     for start in range(len(page_text)):
-        if page_text[start] != target[0] and target_len > 3:
+        if page_text[start] != target[0]:
             continue
         for window_len in range(min_len, max_len + 1):
             end = start + window_len
