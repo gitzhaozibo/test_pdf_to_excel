@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import threading
 from datetime import date
 from typing import Dict, List, Optional
 
@@ -83,6 +84,7 @@ def _is_retryable_db_error(exc: Exception) -> bool:
 
 
 _engine: Optional[Engine] = None
+_engine_lock = threading.Lock()
 
 
 @retry(
@@ -94,13 +96,16 @@ _engine: Optional[Engine] = None
 def get_engine() -> Engine:
     global _engine
     if _engine is None:
-        _engine = create_engine(
-            _normalize_database_url(os.environ["DATABASE_URL"]),
-            pool_pre_ping=True,
-        )
-    # 接続可能かを確認し、一時的な障害はリトライ対象にする
-    with _engine.connect():
-        pass
+        with _engine_lock:
+            if _engine is None:
+                engine = create_engine(
+                    _normalize_database_url(os.environ["DATABASE_URL"]),
+                    pool_pre_ping=True,
+                )
+                # 接続可能かを確認し、一時的な障害はリトライ対象にする
+                with engine.connect():
+                    pass
+                _engine = engine
     return _engine
 
 
