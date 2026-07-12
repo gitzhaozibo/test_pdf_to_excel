@@ -7,7 +7,7 @@ import streamlit as st
 from azure.core.exceptions import HttpResponseError, ServiceRequestError
 from dotenv import load_dotenv
 from openai import APIConnectionError, APITimeoutError, APIStatusError
-from psycopg import OperationalError
+from sqlalchemy.exc import OperationalError
 
 from config import EXTRACT_FIELDS
 from services.db import compute_pdf_hash, fetch_contracts, find_contract_by_hash, init_db, save_contract
