@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    container_name: contract-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: contracts
+    ports:
+      - "5433:5432"
+    volumes:
+      - contract_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d contracts"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  contract_db_data:

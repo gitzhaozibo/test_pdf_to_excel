@@ -4,11 +4,10 @@ import json
 import os
 from typing import Dict
 
-from openai import APIConnectionError, APITimeoutError, APIStatusError, AzureOpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, AzureOpenAI
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from config import EXTRACT_FIELDS, RETRYABLE_HTTP_STATUS_CODES
-
 
 SYSTEM_PROMPT = """あなたは契約書抽出アシスタントです。
 OCRテキストから指定項目をJSONで抽出してください。
@@ -44,7 +43,6 @@ def extract_fields_from_text(full_text: str) -> Dict:
     item_lines = "\n".join([f"- {f['key']}: {f['label']}" for f in EXTRACT_FIELDS])
     response = client.chat.completions.create(
         model=os.environ["AOAI_DEPLOYMENT"],
-        temperature=0,
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
