@@ -110,18 +110,6 @@ def locate_source_text(words: Sequence[Dict], source_text: str) -> Optional[Matc
     return best
 
 
-def _polygon_to_rect(word: Dict) -> Optional["fitz.Rect"]:
-    import fitz
-
-    polygon = word.get("polygon") or []
-    xs = polygon[0::2]
-    ys = polygon[1::2]
-    if not xs or not ys:
-        return None
-
-    return fitz.Rect(min(xs), min(ys), max(xs), max(ys))
-
-
 def _polygon_to_page_rect(word: Dict, page: "fitz.Page") -> Optional["fitz.Rect"]:
     import fitz
 
