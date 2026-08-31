@@ -48,6 +48,7 @@ def analyze_pdf(pdf_bytes: bytes) -> Tuple[str, List[Dict]]:
                     "polygon": list(word.polygon or []),
                     "page_width": page.width,
                     "page_height": page.height,
+                    "page_angle": page.angle,
                 }
             )
 

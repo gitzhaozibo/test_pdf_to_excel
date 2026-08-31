@@ -122,6 +122,30 @@ def _polygon_to_rect(word: Dict) -> Optional["fitz.Rect"]:
     return fitz.Rect(min(xs), min(ys), max(xs), max(ys))
 
 
+def _polygon_to_page_rect(word: Dict, page: "fitz.Page") -> Optional["fitz.Rect"]:
+    import fitz
+
+    polygon = word.get("polygon") or []
+    page_width = word.get("page_width")
+    page_height = word.get("page_height")
+    if len(polygon) < 4 or len(polygon) % 2 or not page_width or not page_height:
+        return None
+
+    sx = page.rect.width / page_width
+    sy = page.rect.height / page_height
+    points = [
+        fitz.Point(polygon[idx] * sx, polygon[idx + 1] * sy)
+        * page.derotation_matrix
+        for idx in range(0, len(polygon), 2)
+    ]
+    return fitz.Rect(
+        min(point.x for point in points),
+        min(point.y for point in points),
+        max(point.x for point in points),
+        max(point.y for point in points),
+    )
+
+
 def render_highlighted_pages(
     pdf_bytes: bytes, words: Sequence[Dict], extracted: Dict[str, Dict]
 ) -> Tuple[List[bytes], Dict[str, bool]]:
@@ -148,24 +172,9 @@ def render_highlighted_pages(
             matched_any = False
 
             for word in selected_words:
-                rect_inch = _polygon_to_rect(word)
-                if rect_inch is None:
+                rect_pt = _polygon_to_page_rect(word, page)
+                if rect_pt is None:
                     continue
-
-                page_width_in = word.get("page_width")
-                page_height_in = word.get("page_height")
-                if not page_width_in or not page_height_in:
-                    continue
-
-                sx = page.rect.width / page_width_in
-                sy = page.rect.height / page_height_in
-
-                rect_pt = fitz.Rect(
-                    rect_inch.x0 * sx,
-                    rect_inch.y0 * sy,
-                    rect_inch.x1 * sx,
-                    rect_inch.y1 * sy,
-                )
                 page.draw_rect(
                     rect_pt,
                     color=(1, 0.4, 0),
